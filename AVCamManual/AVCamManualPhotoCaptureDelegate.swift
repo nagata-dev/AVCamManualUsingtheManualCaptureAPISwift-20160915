@@ -16,9 +16,8 @@
 import AVFoundation
 import Photos
 
-protocol AVCamManualPhotoCaptureDelegateType: class {}
-@available(iOS 10.0, *)
-@objc(AVCamManualPhotoCaptureDelegate)
+protocol AVCamManualPhotoCaptureDelegateType: AnyObject {}
+
 class AVCamManualPhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate, AVCamManualPhotoCaptureDelegateType {
     
     private(set) var requestedPhotoSettings: AVCapturePhotoSettings
