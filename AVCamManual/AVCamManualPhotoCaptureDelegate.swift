@@ -42,6 +42,20 @@ class AVCamManualPhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate, 
         self.willCapturePhotoAnimation()
     }
     
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: (any Error)?) {
+        if let error = error {
+            NSLog("Error capturing photo: \(error)")
+            return
+        }
+
+        if photo.isRawPhoto {
+            self.dngPhotoData = photo.fileDataRepresentation()
+        } else {
+            self.jpegPhotoData = photo.fileDataRepresentation()
+        }
+    }
+    
+    /*
     func photoOutput(_ captureOutput: AVCapturePhotoOutput, didFinishProcessingPhoto photoSampleBuffer: CMSampleBuffer?, previewPhoto previewPhotoSampleBuffer: CMSampleBuffer?, resolvedSettings: AVCaptureResolvedPhotoSettings, bracketSettings: AVCaptureBracketedStillImageSettings?, error: Error?) {
         if let error = error {
             NSLog("Error capturing photo: \(error)")
@@ -58,6 +72,7 @@ class AVCamManualPhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate, 
         
         self.dngPhotoData = AVCapturePhotoOutput.dngPhotoDataRepresentation(forRawSampleBuffer: rawSampleBuffer!, previewPhotoSampleBuffer: previewPhotoSampleBuffer)
     }
+     */
     
     func photoOutput(_ captureOutput: AVCapturePhotoOutput, didFinishCaptureFor resolvedSettings: AVCaptureResolvedPhotoSettings, error: Error?) {
         if let error = error {

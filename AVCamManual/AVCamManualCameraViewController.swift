@@ -17,9 +17,6 @@ import UIKit
 import AVFoundation
 import Photos
 
-/*
-private var CapturingStillImageContext = 0 //### iOS < 10.0
- */
 private var SessionRunningContext = 0
 private var FocusModeContext = 0
 private var ExposureModeContext = 0
@@ -30,9 +27,6 @@ private var ISOContext = 0
 private var ExposureTargetBiasContext = 0
 private var ExposureTargetOffsetContext = 0
 private var DeviceWhiteBalanceGainsContext = 0
-/*
-private var LensStabilizationContext = 0 //### iOS < 10.0
- */
 
 private enum AVCamManualSetupResult: Int {
     case success
@@ -55,7 +49,6 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
     @IBOutlet weak var cameraButton: UIButton!
     @IBOutlet weak var photoButton: UIButton!
     @IBOutlet weak var HUDButton: UIButton!
-    @IBOutlet weak var manualSegments: UISegmentedControl! //###
     
     @IBOutlet weak var manualHUD: UIView!
     
@@ -141,7 +134,11 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         let deviceTypes: [AVCaptureDevice.DeviceType] = [
             .builtInWideAngleCamera,
             .builtInDualCamera,
-            .builtInTelephotoCamera
+            .builtInTelephotoCamera,
+            //### What would be the appropriate device types for the latest iPhones?
+            .builtInDualWideCamera,
+            .builtInTripleCamera,
+            .builtInUltraWideCamera,
         ]
         self.videoDeviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: AVMediaType.video, position: .unspecified)
 
@@ -263,9 +260,9 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         
         self.focusModeControl.isEnabled = (self.videoDevice != nil)
         if let videoDevice = self.videoDevice {//###
-            self.focusModeControl.selectedSegmentIndex = self.focusModes.index(of: videoDevice.focusMode)!
-            for mode in self.focusModes {
-                self.focusModeControl.setEnabled(videoDevice.isFocusModeSupported(mode), forSegmentAt: self.focusModes.index(of: mode)!)
+            self.focusModeControl.selectedSegmentIndex = self.focusModes.index(of: videoDevice.focusMode) ?? UISegmentedControlNoSegment
+            for (i, mode) in self.focusModes.enumerated() {
+                self.focusModeControl.setEnabled(videoDevice.isFocusModeSupported(mode), forSegmentAt: i)
             }
         }
         
@@ -405,7 +402,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         // Add video input
         guard let videoDevice = AVCaptureDevice.default(
             .builtInWideAngleCamera,
-            for:AVMediaType.video,
+            for: .video,
             position: .unspecified
         ) else {
             NSLog("Could not default AVCaptureDevice")
@@ -437,10 +434,14 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
                  Use the status bar orientation as the initial video orientation. Subsequent orientation changes are
                  handled by -[AVCamManualCameraViewController viewWillTransitionToSize:withTransitionCoordinator:].
                  */
-                let statusBarOrientation = UIApplication.shared.statusBarOrientation
+                //let statusBarOrientation = UIApplication.shared.statusBarOrientation
                 var initialVideoOrientation = AVCaptureVideoOrientation.portrait
-                if statusBarOrientation != UIInterfaceOrientation.unknown {
-                    initialVideoOrientation = AVCaptureVideoOrientation(rawValue: statusBarOrientation.rawValue)!
+                //if statusBarOrientation != UIInterfaceOrientation.unknown {
+                //  initialVideoOrientation = AVCaptureVideoOrientation(rawValue: statusBarOrientation.rawValue)!
+                //}
+                if let interfaceOrientation = self.view.window?.windowScene?.interfaceOrientation,
+                   interfaceOrientation != .unknown {
+                    initialVideoOrientation = AVCaptureVideoOrientation(rawValue: interfaceOrientation.rawValue) ?? .portrait
                 }
                 
                 let previewLayer = self.previewView.layer as! AVCaptureVideoPreviewLayer
@@ -511,13 +512,13 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
             if rawEnabled, let formatType = photoOutput.availableRawPhotoPixelFormatTypes.first {
                 photoSettings = AVCapturePhotoBracketSettings(rawPixelFormatType: formatType, processedFormat: nil, bracketedSettings: bracketedSettings)
             } else {
-                photoSettings = AVCapturePhotoBracketSettings(rawPixelFormatType: 0, processedFormat: [AVVideoCodecKey: AVVideoCodecJPEG], bracketedSettings: bracketedSettings)
+                photoSettings = AVCapturePhotoBracketSettings(rawPixelFormatType: 0, processedFormat: [AVVideoCodecKey: AVVideoCodecType.jpeg], bracketedSettings: bracketedSettings)
             }
             
             (photoSettings as! AVCapturePhotoBracketSettings).isLensStabilizationEnabled = true
         } else {
             if rawEnabled, let formatType = photoOutput.availableRawPhotoPixelFormatTypes.first {
-                photoSettings = AVCapturePhotoSettings(rawPixelFormatType: formatType, processedFormat: [AVVideoCodecKey : AVVideoCodecJPEG])
+                photoSettings = AVCapturePhotoSettings(rawPixelFormatType: formatType, processedFormat: [AVVideoCodecKey : AVVideoCodecType.jpeg])
             } else {
                 photoSettings = AVCapturePhotoSettings()
             }
@@ -534,8 +535,12 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
             photoSettings?.previewPhotoFormat = [kCVPixelBufferPixelFormatTypeKey as String: formatType] // The first format in the array is the preferred format
         }
         
-        if self.videoDevice?.exposureMode == .custom {
-            photoSettings?.isAutoStillImageStabilizationEnabled = true
+        if #available(iOS 13.0, *) {
+            //### No direct replacement found...
+        } else {
+            if self.videoDevice?.exposureMode == .custom {
+                photoSettings?.isAutoStillImageStabilizationEnabled = false
+            }
         }
         
         photoSettings?.isHighResolutionPhotoEnabled = true
@@ -1296,7 +1301,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
 
 //MARK: Utilities
 
-extension AVCaptureDevice.FocusMode: CustomStringConvertible {
+extension AVCaptureDevice.FocusMode: @retroactive CustomStringConvertible {
     public var description: String {
         var string: String
         
@@ -1313,7 +1318,7 @@ extension AVCaptureDevice.FocusMode: CustomStringConvertible {
     }
 }
 
-extension AVCaptureDevice.ExposureMode: CustomStringConvertible {
+extension AVCaptureDevice.ExposureMode: @retroactive CustomStringConvertible {
     public var description: String {
         var string: String
         
@@ -1332,7 +1337,7 @@ extension AVCaptureDevice.ExposureMode: CustomStringConvertible {
     }
 }
 
-extension AVCaptureDevice.WhiteBalanceMode: CustomStringConvertible {
+extension AVCaptureDevice.WhiteBalanceMode: @retroactive CustomStringConvertible {
     public var description: String {
         var string: String
         
