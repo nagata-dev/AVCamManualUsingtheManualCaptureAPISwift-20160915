@@ -19,41 +19,70 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="A22-Dd-vdT" userLabel="Photo Button">
-                                <rect key="frame" x="170.66666666666666" y="774" width="52" height="36"/>
-                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.29999999999999999" colorSpace="custom" customColorSpace="sRGB"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="20"/>
-                                <state key="normal" title="Photo">
-                                    <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                </state>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                        <integer key="value" value="4"/>
-                                    </userDefinedRuntimeAttribute>
-                                </userDefinedRuntimeAttributes>
-                                <connections>
-                                    <action selector="capturePhoto:" destination="zFy-Vn-e8f" eventType="touchUpInside" id="hlu-OA-TpQ"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mcl-en-N2e">
-                                <rect key="frame" x="87.666666666666671" y="774" width="63.000000000000014" height="36"/>
-                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.29999999999999999" colorSpace="custom" customColorSpace="sRGB"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="36" id="k3x-ex-A07"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="20"/>
-                                <state key="normal" title="Record">
-                                    <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                </state>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                        <integer key="value" value="4"/>
-                                    </userDefinedRuntimeAttribute>
-                                </userDefinedRuntimeAttributes>
-                                <connections>
-                                    <action selector="toggleMovieRecording:" destination="zFy-Vn-e8f" eventType="touchUpInside" id="kRM-DR-2H2"/>
-                                </connections>
-                            </button>
+                            <stackView opaque="NO" contentMode="scaleToFill" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="gLr-oL-AyO">
+                                <rect key="frame" x="56.666666666666657" y="774" width="280" height="36"/>
+                                <subviews>
+                                    <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mcl-en-N2e">
+                                        <rect key="frame" x="0.0" y="0.0" width="80" height="36"/>
+                                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.29999999999999999" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="dKJ-eW-57I"/>
+                                            <constraint firstAttribute="height" constant="36" id="k3x-ex-A07"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <state key="normal" title="Record">
+                                            <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        </state>
+                                        <userDefinedRuntimeAttributes>
+                                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                <integer key="value" value="4"/>
+                                            </userDefinedRuntimeAttribute>
+                                        </userDefinedRuntimeAttributes>
+                                        <connections>
+                                            <action selector="toggleMovieRecording:" destination="zFy-Vn-e8f" eventType="touchUpInside" id="kRM-DR-2H2"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="A22-Dd-vdT" userLabel="Photo Button">
+                                        <rect key="frame" x="100" y="0.0" width="80" height="36"/>
+                                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.29999999999999999" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="0S7-8s-jqk"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <state key="normal" title="Photo">
+                                            <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        </state>
+                                        <userDefinedRuntimeAttributes>
+                                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                <integer key="value" value="4"/>
+                                            </userDefinedRuntimeAttribute>
+                                        </userDefinedRuntimeAttributes>
+                                        <connections>
+                                            <action selector="capturePhoto:" destination="zFy-Vn-e8f" eventType="touchUpInside" id="hlu-OA-TpQ"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="uZ6-D1-thS">
+                                        <rect key="frame" x="200.00000000000003" y="0.0" width="79.999999999999972" height="36"/>
+                                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.29999999999999999" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="36" id="O4U-2s-uyX"/>
+                                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="pIb-M2-81D"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <state key="normal" title="Camera">
+                                            <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        </state>
+                                        <userDefinedRuntimeAttributes>
+                                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                <integer key="value" value="4"/>
+                                            </userDefinedRuntimeAttribute>
+                                        </userDefinedRuntimeAttributes>
+                                        <connections>
+                                            <action selector="chooseNewCamera:" destination="zFy-Vn-e8f" eventType="touchUpInside" id="anb-8q-Z4e"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                            </stackView>
                             <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Camera Unavailable" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OoU-eQ-sum">
                                 <rect key="frame" x="93" y="411.66666666666669" width="207" height="28.666666666666686"/>
                                 <color key="tintColor" red="1" green="1" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -505,25 +534,6 @@
                                     <constraint firstItem="543-NV-2bk" firstAttribute="top" secondItem="amH-FF-rBy" secondAttribute="top" id="zOR-Km-IpU"/>
                                 </constraints>
                             </view>
-                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="uZ6-D1-thS">
-                                <rect key="frame" x="242.66666666666663" y="774" width="69" height="36"/>
-                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.29999999999999999" colorSpace="custom" customColorSpace="sRGB"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="36" id="O4U-2s-uyX"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="20"/>
-                                <state key="normal" title="Camera">
-                                    <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                </state>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                        <integer key="value" value="4"/>
-                                    </userDefinedRuntimeAttribute>
-                                </userDefinedRuntimeAttributes>
-                                <connections>
-                                    <action selector="chooseNewCamera:" destination="zFy-Vn-e8f" eventType="touchUpInside" id="anb-8q-Z4e"/>
-                                </connections>
-                            </button>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="vd8-8t-w6g">
                                 <rect key="frame" x="266" y="67" width="111" height="32"/>
                                 <segments>
@@ -555,32 +565,24 @@
                         <constraints>
                             <constraint firstItem="gwL-zO-1Pw" firstAttribute="centerY" secondItem="9Za-05-zwY" secondAttribute="centerY" id="0ah-9b-xpC"/>
                             <constraint firstItem="vd8-8t-w6g" firstAttribute="top" secondItem="Oj9-a9-JTG" secondAttribute="bottom" constant="8" id="0fe-kR-ocT"/>
-                            <constraint firstItem="uZ6-D1-thS" firstAttribute="leading" secondItem="A22-Dd-vdT" secondAttribute="trailing" constant="20" id="3Ex-Lz-Ril"/>
                             <constraint firstItem="OoU-eQ-sum" firstAttribute="centerY" secondItem="9Za-05-zwY" secondAttribute="centerY" id="3Oi-P6-ZBz"/>
-                            <constraint firstItem="i3h-nQ-SAp" firstAttribute="top" secondItem="A22-Dd-vdT" secondAttribute="bottom" constant="8" id="7Yx-Me-WQ0"/>
-                            <constraint firstItem="A22-Dd-vdT" firstAttribute="centerX" secondItem="9Za-05-zwY" secondAttribute="centerX" id="BPC-La-nNc"/>
-                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="uZ6-D1-thS" secondAttribute="trailing" id="ERT-nW-TIi"/>
+                            <constraint firstItem="gLr-oL-AyO" firstAttribute="top" secondItem="amH-FF-rBy" secondAttribute="bottom" constant="40" id="AG9-9g-YKI"/>
                             <constraint firstItem="vd8-8t-w6g" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="BZ1-aS-3u4" secondAttribute="trailing" constant="8" symbolic="YES" id="F5W-AJ-hes"/>
                             <constraint firstItem="BZ1-aS-3u4" firstAttribute="top" secondItem="Oj9-a9-JTG" secondAttribute="bottom" constant="10" id="LJY-0Q-ljg"/>
-                            <constraint firstItem="mcl-en-N2e" firstAttribute="centerY" secondItem="A22-Dd-vdT" secondAttribute="centerY" id="Lna-TJ-hfR"/>
                             <constraint firstAttribute="leadingMargin" secondItem="BZ1-aS-3u4" secondAttribute="leading" id="Qdy-KN-fGA"/>
-                            <constraint firstItem="A22-Dd-vdT" firstAttribute="leading" secondItem="mcl-en-N2e" secondAttribute="trailing" constant="20" id="Qf1-zu-0iS"/>
                             <constraint firstItem="gwL-zO-1Pw" firstAttribute="centerX" secondItem="9Za-05-zwY" secondAttribute="centerX" id="Xpm-3m-FZY"/>
                             <constraint firstItem="amH-FF-rBy" firstAttribute="top" secondItem="BZ1-aS-3u4" secondAttribute="bottom" constant="10" id="YMc-0X-LWU"/>
-                            <constraint firstItem="A22-Dd-vdT" firstAttribute="top" secondItem="amH-FF-rBy" secondAttribute="bottom" constant="40" id="cRJ-zf-PRR"/>
                             <constraint firstItem="OoU-eQ-sum" firstAttribute="centerX" secondItem="9Za-05-zwY" secondAttribute="centerX" id="cWN-EI-gUI"/>
-                            <constraint firstItem="A22-Dd-vdT" firstAttribute="top" relation="greaterThanOrEqual" secondItem="amH-FF-rBy" secondAttribute="bottom" constant="8" id="d41-sd-oSo"/>
                             <constraint firstItem="amH-FF-rBy" firstAttribute="leading" secondItem="9Za-05-zwY" secondAttribute="leadingMargin" id="hci-Cp-W6R"/>
-                            <constraint firstItem="uZ6-D1-thS" firstAttribute="centerY" secondItem="A22-Dd-vdT" secondAttribute="centerY" id="kfl-Ff-Udt"/>
                             <constraint firstAttribute="trailingMargin" secondItem="vd8-8t-w6g" secondAttribute="trailing" id="m9a-PO-qVG"/>
+                            <constraint firstItem="i3h-nQ-SAp" firstAttribute="top" secondItem="gLr-oL-AyO" secondAttribute="bottom" constant="8" symbolic="YES" id="nep-ZB-vJv"/>
                             <constraint firstItem="amH-FF-rBy" firstAttribute="trailing" secondItem="9Za-05-zwY" secondAttribute="trailingMargin" id="uTg-Pr-KNj"/>
-                            <constraint firstItem="mcl-en-N2e" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="9Za-05-zwY" secondAttribute="leadingMargin" id="woG-dQ-wPI"/>
+                            <constraint firstItem="gLr-oL-AyO" firstAttribute="centerX" secondItem="9Za-05-zwY" secondAttribute="centerX" id="ubF-Nq-hTg"/>
                             <constraint firstItem="BZ1-aS-3u4" firstAttribute="top" secondItem="Oj9-a9-JTG" secondAttribute="bottom" constant="8" id="yix-VM-8PR"/>
                         </constraints>
                         <variation key="default">
                             <mask key="constraints">
                                 <exclude reference="LJY-0Q-ljg"/>
-                                <exclude reference="d41-sd-oSo"/>
                             </mask>
                         </variation>
                         <connections>
