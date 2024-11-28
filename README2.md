@@ -1,6 +1,7 @@
 # AVCamManual: Extending AVCam to Use Manual Capture API
 
 Translated by OOPer in cooperation with shlab.jp, on 2015/5/3.
+Latest update by OOPer on 2024/11/28.
 
 Based on
 <https://developer.apple.com/library/archive/samplecode/AVCamManual/Introduction/Intro.html#//apple_ref/doc/uid/TP40014578>
