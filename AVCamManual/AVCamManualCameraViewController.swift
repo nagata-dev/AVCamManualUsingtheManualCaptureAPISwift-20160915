@@ -105,7 +105,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
     // Utilities.
     private var setupResult: AVCamManualSetupResult = .success
     private var isSessionRunning: Bool = false
-    private var backgroundRecordingID: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
+    private var backgroundRecordingID: UIBackgroundTaskIdentifier = .invalid
     
     private let kExposureDurationPower = 5.0 // Higher numbers will give the slider more sensitivity at shorter durations
     private let kExposureMinimumDuration = 1.0/1000 // Limit exposure duration to a useful range
@@ -200,7 +200,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
                     alertController.addAction(cancelAction)
                     // Provide quick access to Settings.
                     let settingsAction = UIAlertAction(title: NSLocalizedString("Settings", comment: "Alert button to open Settings"), style: .default) {action in
-                        UIApplication.shared.open(URL(string: UIApplicationOpenSettingsURLString)!)
+                        UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
                     }
                     alertController.addAction(settingsAction)
                     self.present(alertController, animated: true, completion: nil)
@@ -233,7 +233,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         
         let deviceOrientation = UIDevice.current.orientation
         
-        if UIDeviceOrientationIsPortrait(deviceOrientation) || UIDeviceOrientationIsLandscape(deviceOrientation) {
+        if deviceOrientation.isPortrait || deviceOrientation.isLandscape {
             let previewLayer = self.previewView.layer as! AVCaptureVideoPreviewLayer
             if #available(iOS 17.0, *) {
                 if let videoDevice {
@@ -268,7 +268,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         
         self.focusModeControl.isEnabled = (self.videoDevice != nil)
         if let videoDevice = self.videoDevice {//###
-            self.focusModeControl.selectedSegmentIndex = self.focusModes.index(of: videoDevice.focusMode) ?? UISegmentedControlNoSegment
+            self.focusModeControl.selectedSegmentIndex = self.focusModes.firstIndex(of: videoDevice.focusMode) ?? UISegmentedControl.noSegment
             for (i, mode) in self.focusModes.enumerated() {
                 self.focusModeControl.setEnabled(videoDevice.isFocusModeSupported(mode), forSegmentAt: i)
             }
@@ -507,7 +507,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         }
 
         // We will not create an AVCaptureMovieFileOutput when configuring the session because the AVCaptureMovieFileOutput does not support movie recording with AVCaptureSessionPresetPhoto
-        self.backgroundRecordingID = UIBackgroundTaskInvalid
+        self.backgroundRecordingID = .invalid
         
         self.session.commitConfiguration()
         
@@ -807,7 +807,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         
         do {
             try self.videoDevice!.lockForConfiguration()
-            self.videoDevice!.setExposureModeCustom(duration: CMTimeMakeWithSeconds(newDurationSeconds, 1000*1000*1000), iso: AVCaptureDevice.currentISO, completionHandler: nil)
+            self.videoDevice!.setExposureModeCustom(duration: CMTimeMakeWithSeconds(newDurationSeconds, preferredTimescale: 1000*1000*1000), iso: AVCaptureDevice.currentISO, completionHandler: nil)
             self.videoDevice!.unlockForConfiguration()
         } catch let error {
             NSLog("Could not lock device for configuration: \(error)")
@@ -1070,7 +1070,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         // is back to NO — which happens sometime after this method returns.
         // Note: Since we use a unique file path for each recording, a new recording will not overwrite a recording currently being saved.
         let currentBackgroundRecordingID = self.backgroundRecordingID
-        self.backgroundRecordingID = UIBackgroundTaskInvalid
+        self.backgroundRecordingID = .invalid
         
         let cleanup: ()->() = {
             if FileManager.default.fileExists(atPath: outputFileURL.path) {
@@ -1079,7 +1079,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
                 } catch _ {}
             }
             
-            if currentBackgroundRecordingID != UIBackgroundTaskInvalid {
+            if currentBackgroundRecordingID != .invalid {
                 UIApplication.shared.endBackgroundTask(currentBackgroundRecordingID)
             }
         }
@@ -1229,8 +1229,8 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
                         do {
                             try self.videoDevice!.lockForConfiguration()
                             defer {self.videoDevice!.unlockForConfiguration()}
-                            self.videoDevice!.activeVideoMaxFrameDuration = kCMTimeInvalid
-                            self.videoDevice!.activeVideoMinFrameDuration = kCMTimeInvalid
+                            self.videoDevice!.activeVideoMaxFrameDuration = .invalid
+                            self.videoDevice!.activeVideoMinFrameDuration = .invalid
                         } catch let error {
                             NSLog("Could not lock device for configuration: \(error)")
                         }
