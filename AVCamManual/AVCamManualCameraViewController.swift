@@ -472,7 +472,14 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         if session.canAddOutput(photoOutput) {
            session.addOutput(photoOutput)
             self.photoOutput = photoOutput
-            photoOutput.isHighResolutionCaptureEnabled = true
+            if #available(iOS 16.0, *) {
+                let maxAvailableDimension = videoDevice.activeFormat.supportedMaxPhotoDimensions.max {$0.width < $1.width}
+                if let maxAvailableDimension {
+                    photoOutput.maxPhotoDimensions = maxAvailableDimension
+                }
+            } else {
+                photoOutput.isHighResolutionCaptureEnabled = true
+            }
             
             self.inProgressPhotoCaptureDelegates = [:]
         } else {
@@ -543,7 +550,16 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
             }
         }
         
-        photoSettings?.isHighResolutionPhotoEnabled = true
+        if #available(iOS 16.0, *) {
+            if let videoDevice {
+                let maxAvailableDimension = videoDevice.activeFormat.supportedMaxPhotoDimensions.max {$0.width < $1.width}
+                if let maxAvailableDimension {
+                    photoOutput.maxPhotoDimensions = maxAvailableDimension
+                }
+            }
+        } else {
+            photoSettings?.isHighResolutionPhotoEnabled = true
+        }
         
         return photoSettings
     }
