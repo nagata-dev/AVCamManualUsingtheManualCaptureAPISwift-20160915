@@ -235,7 +235,15 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         
         if UIDeviceOrientationIsPortrait(deviceOrientation) || UIDeviceOrientationIsLandscape(deviceOrientation) {
             let previewLayer = self.previewView.layer as! AVCaptureVideoPreviewLayer
-            previewLayer.connection?.videoOrientation = AVCaptureVideoOrientation(rawValue: deviceOrientation.rawValue)!
+            if #available(iOS 17.0, *) {
+                if let videoDevice {
+                    let coordinator = AVCaptureDevice.RotationCoordinator(device: videoDevice, previewLayer: previewLayer)
+                    let angle = coordinator.videoRotationAngleForHorizonLevelPreview
+                    previewLayer.connection?.videoRotationAngle = angle
+                }
+            } else {
+                previewLayer.connection?.videoOrientation = AVCaptureVideoOrientation(rawValue: deviceOrientation.rawValue)!
+            }
         }
     }
     
@@ -434,18 +442,27 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
                  Use the status bar orientation as the initial video orientation. Subsequent orientation changes are
                  handled by -[AVCamManualCameraViewController viewWillTransitionToSize:withTransitionCoordinator:].
                  */
-                //let statusBarOrientation = UIApplication.shared.statusBarOrientation
-                var initialVideoOrientation = AVCaptureVideoOrientation.portrait
-                //if statusBarOrientation != UIInterfaceOrientation.unknown {
-                //  initialVideoOrientation = AVCaptureVideoOrientation(rawValue: statusBarOrientation.rawValue)!
-                //}
-                if let interfaceOrientation = self.view.window?.windowScene?.interfaceOrientation,
-                   interfaceOrientation != .unknown {
-                    initialVideoOrientation = AVCaptureVideoOrientation(rawValue: interfaceOrientation.rawValue) ?? .portrait
+                if #available(iOS 17.0, *) {
+                    if let previewLayer = self.previewView.layer as? AVCaptureVideoPreviewLayer {
+                        var initialVideoRotationAngle: CGFloat = 0.0
+                        if let interfaceOrientation = self.view.window?.windowScene?.interfaceOrientation,
+                           interfaceOrientation != .unknown {
+                            let coordinator = AVCaptureDevice.RotationCoordinator(device: videoDevice, previewLayer: previewLayer)
+                            initialVideoRotationAngle = coordinator.videoRotationAngleForHorizonLevelPreview
+                        }
+                        
+                        previewLayer.connection?.videoRotationAngle = initialVideoRotationAngle
+                    }
+                } else {
+                    var initialVideoOrientation = AVCaptureVideoOrientation.portrait
+                    if let interfaceOrientation = self.view.window?.windowScene?.interfaceOrientation,
+                       interfaceOrientation != .unknown {
+                        initialVideoOrientation = AVCaptureVideoOrientation(rawValue: interfaceOrientation.rawValue) ?? .portrait
+                    }
+                    
+                    let previewLayer = self.previewView.layer as! AVCaptureVideoPreviewLayer
+                    previewLayer.connection?.videoOrientation = initialVideoOrientation
                 }
-                
-                let previewLayer = self.previewView.layer as! AVCaptureVideoPreviewLayer
-                previewLayer.connection?.videoOrientation = initialVideoOrientation
             }
         } else {
             NSLog("Could not add video device input to the session")
@@ -884,38 +901,78 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         // Retrieve the video preview layer's video orientation on the main queue before entering the session queue
         // We do this to ensure UI elements are accessed on the main thread and session configuration is done on the session queue
         let previewLayer = self.previewView.layer as! AVCaptureVideoPreviewLayer
-        let videoPreviewLayerVideoOrientation = previewLayer.connection?.videoOrientation
-        
-        let settings = self.currentPhotoSettings()
-        self.sessionQueue.async {
+        if #available(iOS 17.0, *) {
+            let videoPreviewLayerRotationAngle = previewLayer.connection?.videoRotationAngle
             
-            // Update the orientation on the photo output video connection before capturing
-            let photoOutputConnection = self.photoOutput?.connection(with: .video)
-            photoOutputConnection?.videoOrientation = videoPreviewLayerVideoOrientation!
-            
-            // Use a separate object for the photo capture delegate to isolate each capture life cycle.
-            let photoCaptureDelegate = AVCamManualPhotoCaptureDelegate(requestedPhotoSettings: settings!, willCapturePhotoAnimation: {
-                // Perform a shutter animation.
-                DispatchQueue.main.async {
-                    self.previewView.layer.opacity = 0.0
-                    UIView.animate(withDuration: 0.25) {
-                        self.previewView.layer.opacity = 1.0
+            let settings = self.currentPhotoSettings()
+            self.sessionQueue.async {
+                
+                // Update the orientation on the photo output video connection before capturing
+                let photoOutputConnection = self.photoOutput?.connection(with: .video)
+                if let videoPreviewLayerRotationAngle {
+                    photoOutputConnection?.videoRotationAngle = videoPreviewLayerRotationAngle
+                }
+
+                // Use a separate object for the photo capture delegate to isolate each capture life cycle.
+                let photoCaptureDelegate = AVCamManualPhotoCaptureDelegate(requestedPhotoSettings: settings!, willCapturePhotoAnimation: {
+                    // Perform a shutter animation.
+                    DispatchQueue.main.async {
+                        self.previewView.layer.opacity = 0.0
+                        UIView.animate(withDuration: 0.25) {
+                            self.previewView.layer.opacity = 1.0
+                        }
                     }
-                }
-            }, completed: {photoCaptureDelegate in
-                // When the capture is complete, remove a reference to the photo capture delegate so it can be deallocated.
-                self.sessionQueue.async {
-                    self.inProgressPhotoCaptureDelegates[photoCaptureDelegate.requestedPhotoSettings.uniqueID] = nil
-                }
-            })
+                }, completed: {photoCaptureDelegate in
+                    // When the capture is complete, remove a reference to the photo capture delegate so it can be deallocated.
+                    self.sessionQueue.async {
+                        self.inProgressPhotoCaptureDelegates[photoCaptureDelegate.requestedPhotoSettings.uniqueID] = nil
+                    }
+                })
+                
+                /*
+                 The Photo Output keeps a weak reference to the photo capture delegate so
+                 we store it in an array to maintain a strong reference to this object
+                 until the capture is completed.
+                 */
+                self.inProgressPhotoCaptureDelegates[photoCaptureDelegate.requestedPhotoSettings.uniqueID] = photoCaptureDelegate
+                self.photoOutput?.capturePhoto(with: settings!, delegate: photoCaptureDelegate)
+            }
+        } else {
+            let videoPreviewLayerVideoOrientation = previewLayer.connection?.videoOrientation
             
-            /*
-             The Photo Output keeps a weak reference to the photo capture delegate so
-             we store it in an array to maintain a strong reference to this object
-             until the capture is completed.
-             */
-            self.inProgressPhotoCaptureDelegates[photoCaptureDelegate.requestedPhotoSettings.uniqueID] = photoCaptureDelegate
-            self.photoOutput?.capturePhoto(with: settings!, delegate: photoCaptureDelegate)
+            let settings = self.currentPhotoSettings()
+            self.sessionQueue.async {
+                
+                // Update the orientation on the photo output video connection before capturing
+                let photoOutputConnection = self.photoOutput?.connection(with: .video)
+                if let videoPreviewLayerVideoOrientation {
+                    photoOutputConnection?.videoOrientation = videoPreviewLayerVideoOrientation
+                }
+
+                // Use a separate object for the photo capture delegate to isolate each capture life cycle.
+                let photoCaptureDelegate = AVCamManualPhotoCaptureDelegate(requestedPhotoSettings: settings!, willCapturePhotoAnimation: {
+                    // Perform a shutter animation.
+                    DispatchQueue.main.async {
+                        self.previewView.layer.opacity = 0.0
+                        UIView.animate(withDuration: 0.25) {
+                            self.previewView.layer.opacity = 1.0
+                        }
+                    }
+                }, completed: {photoCaptureDelegate in
+                    // When the capture is complete, remove a reference to the photo capture delegate so it can be deallocated.
+                    self.sessionQueue.async {
+                        self.inProgressPhotoCaptureDelegates[photoCaptureDelegate.requestedPhotoSettings.uniqueID] = nil
+                    }
+                })
+                
+                /*
+                 The Photo Output keeps a weak reference to the photo capture delegate so
+                 we store it in an array to maintain a strong reference to this object
+                 until the capture is completed.
+                 */
+                self.inProgressPhotoCaptureDelegates[photoCaptureDelegate.requestedPhotoSettings.uniqueID] = photoCaptureDelegate
+                self.photoOutput?.capturePhoto(with: settings!, delegate: photoCaptureDelegate)
+            }
         }
     }
     
@@ -930,29 +987,65 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         // Retrieve the video preview layer's video orientation on the main queue before entering the session queue. We do this to ensure UI
         // elements are accessed on the main thread and session configuration is done on the session queue.
         let previewLayer = self.previewView.layer as! AVCaptureVideoPreviewLayer
-        let previewLayerVideoOrientation = previewLayer.connection?.videoOrientation
-        self.sessionQueue.async {
-            if !(self.movieFileOutput?.isRecording ?? false) {
-                if UIDevice.current.isMultitaskingSupported {
-                    // Setup background task. This is needed because the -[captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:]
-                    // callback is not received until AVCamManual returns to the foreground unless you request background execution time.
-                    // This also ensures that there will be time to write the file to the photo library when AVCamManual is backgrounded.
-                    // To conclude this background execution, -endBackgroundTask is called in
-                    // -[captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:] after the recorded file has been saved.
-                    self.backgroundRecordingID = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
+        if #available(iOS 17.0, *) {
+            var previewLayerVideoRotationAngle: CGFloat? = nil
+            if let videoDevice {
+                let coordinator = AVCaptureDevice.RotationCoordinator(device: videoDevice, previewLayer: previewLayer)
+                previewLayerVideoRotationAngle = coordinator.videoRotationAngleForHorizonLevelPreview
+            }
+            self.sessionQueue.async {
+                if !(self.movieFileOutput?.isRecording ?? false) {
+                    if UIDevice.current.isMultitaskingSupported {
+                        // Setup background task. This is needed because the -[captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:]
+                        // callback is not received until AVCamManual returns to the foreground unless you request background execution time.
+                        // This also ensures that there will be time to write the file to the photo library when AVCamManual is backgrounded.
+                        // To conclude this background execution, -endBackgroundTask is called in
+                        // -[captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:] after the recorded file has been saved.
+                        self.backgroundRecordingID = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
+                    }
+                    let movieConnection = self.movieFileOutput?.connection(with: .video)
+                    if let previewLayerVideoRotationAngle {
+                        movieConnection?.videoRotationAngle = previewLayerVideoRotationAngle
+                    }
+
+                    // Start recording to temporary file
+                    let outputFileName = ProcessInfo.processInfo.globallyUniqueString
+                    let outputFileURL: URL
+                    outputFileURL = FileManager.default.temporaryDirectory
+                        .appendingPathComponent(outputFileName)
+                        .appendingPathExtension("mov")
+                    self.movieFileOutput!.startRecording(to: outputFileURL, recordingDelegate: self)
+                } else {
+                    self.movieFileOutput!.stopRecording()
                 }
-                let movieConnection = self.movieFileOutput?.connection(with: AVMediaType.video)
-                movieConnection?.videoOrientation = previewLayerVideoOrientation!
-                
-                // Start recording to temporary file
-                let outputFileName = ProcessInfo.processInfo.globallyUniqueString
-                let outputFileURL: URL
-                outputFileURL = FileManager.default.temporaryDirectory
-                    .appendingPathComponent(outputFileName)
-                    .appendingPathExtension("mov")
-                self.movieFileOutput!.startRecording(to: outputFileURL, recordingDelegate: self)
-            } else {
-                self.movieFileOutput!.stopRecording()
+            }
+        } else {
+            let previewLayerVideoOrientation = previewLayer.connection?.videoOrientation
+            self.sessionQueue.async {
+                if !(self.movieFileOutput?.isRecording ?? false) {
+                    if UIDevice.current.isMultitaskingSupported {
+                        // Setup background task. This is needed because the -[captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:]
+                        // callback is not received until AVCamManual returns to the foreground unless you request background execution time.
+                        // This also ensures that there will be time to write the file to the photo library when AVCamManual is backgrounded.
+                        // To conclude this background execution, -endBackgroundTask is called in
+                        // -[captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:] after the recorded file has been saved.
+                        self.backgroundRecordingID = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
+                    }
+                    let movieConnection = self.movieFileOutput?.connection(with: .video)
+                    if let previewLayerVideoOrientation {
+                        movieConnection?.videoOrientation = previewLayerVideoOrientation
+                    }
+
+                    // Start recording to temporary file
+                    let outputFileName = ProcessInfo.processInfo.globallyUniqueString
+                    let outputFileURL: URL
+                    outputFileURL = FileManager.default.temporaryDirectory
+                        .appendingPathComponent(outputFileName)
+                        .appendingPathExtension("mov")
+                    self.movieFileOutput!.startRecording(to: outputFileURL, recordingDelegate: self)
+                } else {
+                    self.movieFileOutput!.stopRecording()
+                }
             }
         }
     }
