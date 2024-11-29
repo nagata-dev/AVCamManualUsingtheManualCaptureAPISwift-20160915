@@ -285,9 +285,9 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         
         self.exposureModeControl.isEnabled = (self.videoDevice != nil)
         if let videoDevice = self.videoDevice {
-            self.exposureModeControl.selectedSegmentIndex = self.exposureModes.index(of: videoDevice.exposureMode)!
+            self.exposureModeControl.selectedSegmentIndex = self.exposureModes.firstIndex(of: videoDevice.exposureMode)!
             for mode in self.exposureModes {
-                self.exposureModeControl.setEnabled(videoDevice.isExposureModeSupported(mode), forSegmentAt: self.exposureModes.index(of: mode)!)
+                self.exposureModeControl.setEnabled(videoDevice.isExposureModeSupported(mode), forSegmentAt: self.exposureModes.firstIndex(of: mode)!)
             }
         }
         
@@ -322,9 +322,9 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         
         self.whiteBalanceModeControl.isEnabled = (self.videoDevice != nil)
         if let videoDevice = self.videoDevice {
-            self.whiteBalanceModeControl.selectedSegmentIndex = self.whiteBalanceModes.index(of: videoDevice.whiteBalanceMode)!
+            self.whiteBalanceModeControl.selectedSegmentIndex = self.whiteBalanceModes.firstIndex(of: videoDevice.whiteBalanceMode)!
             for mode in self.whiteBalanceModes {
-                self.whiteBalanceModeControl.setEnabled(videoDevice.isWhiteBalanceModeSupported(mode), forSegmentAt: self.whiteBalanceModes.index(of: mode)!)
+                self.whiteBalanceModeControl.setEnabled(videoDevice.isWhiteBalanceModeSupported(mode), forSegmentAt: self.whiteBalanceModes.firstIndex(of: mode)!)
             }
         }
         
@@ -728,7 +728,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
                 self.videoDevice!.focusMode = mode
             } else {
                 NSLog("Focus mode %@ is not supported. Focus mode is %@.", mode.description, self.videoDevice!.focusMode.description)
-                self.focusModeControl.selectedSegmentIndex = self.focusModes.index(of: self.videoDevice!.focusMode)!
+                self.focusModeControl.selectedSegmentIndex = self.focusModes.firstIndex(of: self.videoDevice!.focusMode)!
             }
             self.videoDevice!.unlockForConfiguration()
         } catch let error {
@@ -790,7 +790,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
                 self.videoDevice!.exposureMode = mode
             } else {
                 NSLog("Exposure mode %@ is not supported. Exposure mode is %@.", mode.description, self.videoDevice!.exposureMode.description)
-                self.exposureModeControl.selectedSegmentIndex = self.exposureModes.index(of: self.videoDevice!.exposureMode)!
+                self.exposureModeControl.selectedSegmentIndex = self.exposureModes.firstIndex(of: self.videoDevice!.exposureMode)!
             }
             self.videoDevice!.unlockForConfiguration()
         } catch let error {
@@ -845,7 +845,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
                 self.videoDevice!.whiteBalanceMode = mode
             } else {
                 NSLog("White balance mode %@ is not supported. White balance mode is %@.", mode.description, self.videoDevice!.whiteBalanceMode.description)
-                self.whiteBalanceModeControl.selectedSegmentIndex = self.whiteBalanceModes.index(of: self.videoDevice!.whiteBalanceMode)!
+                self.whiteBalanceModeControl.selectedSegmentIndex = self.whiteBalanceModes.firstIndex(of: self.videoDevice!.whiteBalanceMode)!
             }
             self.videoDevice!.unlockForConfiguration()
         } catch let error {
@@ -1189,7 +1189,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
             if let value = newValue as? Int {
                 let newMode = AVCaptureDevice.FocusMode(rawValue: value)!
                 DispatchQueue.main.async {
-                    self.focusModeControl.selectedSegmentIndex = self.focusModes.index(of: newMode)!
+                    self.focusModeControl.selectedSegmentIndex = self.focusModes.firstIndex(of: newMode)!
                     self.lensPositionSlider.isEnabled = (newMode == .locked)
                     
                     if let old = oldValue as? Int {
@@ -1238,7 +1238,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
                 }
                 DispatchQueue.main.async {
                     
-                    self.exposureModeControl.selectedSegmentIndex = self.exposureModes.index(of: newMode)!
+                    self.exposureModeControl.selectedSegmentIndex = self.exposureModes.firstIndex(of: newMode)!
                     self.exposureDurationSlider.isEnabled = (newMode == .custom)
                     self.ISOSlider.isEnabled = (newMode == .custom)
                     
@@ -1304,7 +1304,7 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
             if let value = newValue as? Int {
                 let newMode = AVCaptureDevice.WhiteBalanceMode(rawValue: value)!
                 DispatchQueue.main.async {
-                    self.whiteBalanceModeControl.selectedSegmentIndex = self.whiteBalanceModes.index(of: newMode)!
+                    self.whiteBalanceModeControl.selectedSegmentIndex = self.whiteBalanceModes.firstIndex(of: newMode)!
                     self.temperatureSlider.isEnabled = (newMode == .locked)
                     self.tintSlider.isEnabled = (newMode == .locked)
                     
@@ -1437,6 +1437,8 @@ extension AVCaptureDevice.FocusMode: @retroactive CustomStringConvertible {
             string = "Auto"
         case .continuousAutoFocus:
             string = "ContinuousAuto"
+        @unknown default:
+            string = "@unknown(\(rawValue))"
         }
         
         return string
@@ -1456,6 +1458,8 @@ extension AVCaptureDevice.ExposureMode: @retroactive CustomStringConvertible {
             string = "ContinuousAuto"
         case .custom:
             string = "Custom"
+        @unknown default:
+            string = "@unknown(\(rawValue))"
         }
         
         return string
@@ -1473,6 +1477,8 @@ extension AVCaptureDevice.WhiteBalanceMode: @retroactive CustomStringConvertible
             string = "Auto"
         case .continuousAutoWhiteBalance:
             string = "ContinuousAuto"
+        @unknown default:
+            string = "@unknown(\(rawValue))"
         }
         
         return string
