@@ -682,9 +682,15 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
             // Remove the existing device input first, since using the front and back camera simultaneously is not supported
             self.session.removeInput(self.videoDeviceInput!)
             if self.session.canAddInput(newVideoDeviceInput) {
-                NotificationCenter.default.removeObserver(self, name: .AVCaptureDeviceSubjectAreaDidChange, object: self.videoDevice)
-                
-                NotificationCenter.default.addObserver(self, selector: #selector(self.subjectAreaDidChange), name: .AVCaptureDeviceSubjectAreaDidChange, object: newVideoDevice)
+                if #available(iOS 18.0, *) {
+                    NotificationCenter.default.removeObserver(self, name: AVCaptureDevice.subjectAreaDidChangeNotification, object: self.videoDevice)
+                    
+                    NotificationCenter.default.addObserver(self, selector: #selector(self.subjectAreaDidChange), name: AVCaptureDevice.subjectAreaDidChangeNotification, object: newVideoDevice)
+                } else {
+                    NotificationCenter.default.removeObserver(self, name: .AVCaptureDeviceSubjectAreaDidChange, object: self.videoDevice)
+                    
+                    NotificationCenter.default.addObserver(self, selector: #selector(self.subjectAreaDidChange), name: .AVCaptureDeviceSubjectAreaDidChange, object: newVideoDevice)
+                }
                 
                 self.session.addInput(newVideoDeviceInput)
                 self.videoDeviceInput = newVideoDeviceInput
@@ -1134,14 +1140,24 @@ class AVCamManualCameraViewController: UIViewController, AVCaptureFileOutputReco
         self.addObserver(self, forKeyPath: "videoDevice.whiteBalanceMode", options: [.old, .new], context: &WhiteBalanceModeContext)
         self.addObserver(self, forKeyPath: "videoDevice.deviceWhiteBalanceGains", options: .new, context: &DeviceWhiteBalanceGainsContext)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(subjectAreaDidChange), name: .AVCaptureDeviceSubjectAreaDidChange, object: self.videoDevice!)
-        NotificationCenter.default.addObserver(self, selector: #selector(sessionRuntimeError), name: .AVCaptureSessionRuntimeError, object: self.session)
+        if #available(iOS 18.0, *) {
+            NotificationCenter.default.addObserver(self, selector: #selector(subjectAreaDidChange), name: AVCaptureDevice.subjectAreaDidChangeNotification, object: self.videoDevice!)
+            NotificationCenter.default.addObserver(self, selector: #selector(sessionRuntimeError), name: AVCaptureSession.runtimeErrorNotification, object: self.session)
+        } else {
+            NotificationCenter.default.addObserver(self, selector: #selector(subjectAreaDidChange), name: .AVCaptureDeviceSubjectAreaDidChange, object: self.videoDevice!)
+            NotificationCenter.default.addObserver(self, selector: #selector(sessionRuntimeError), name: .AVCaptureSessionRuntimeError, object: self.session)
+        }
         // A session can only run when the app is full screen. It will be interrupted in a multi-app layout, introduced in iOS 9,
         // see also the documentation of AVCaptureSessionInterruptionReason. Add observers to handle these session interruptions
         // and show a preview is paused message. See the documentation of AVCaptureSessionWasInterruptedNotification for other
         // interruption reasons.
-        NotificationCenter.default.addObserver(self, selector: #selector(sessionWasInterrupted(_:)), name: .AVCaptureSessionWasInterrupted, object: self.session)
-        NotificationCenter.default.addObserver(self, selector: #selector(sessionInterruptionEnded(_:)), name: .AVCaptureSessionInterruptionEnded, object: self.session)
+        if #available(iOS 18.0, *) {
+            NotificationCenter.default.addObserver(self, selector: #selector(sessionWasInterrupted(_:)), name: AVCaptureSession.wasInterruptedNotification, object: self.session)
+            NotificationCenter.default.addObserver(self, selector: #selector(sessionInterruptionEnded(_:)), name: AVCaptureSession.interruptionEndedNotification, object: self.session)
+        } else {
+            NotificationCenter.default.addObserver(self, selector: #selector(sessionWasInterrupted(_:)), name: .AVCaptureSessionWasInterrupted, object: self.session)
+            NotificationCenter.default.addObserver(self, selector: #selector(sessionInterruptionEnded(_:)), name: .AVCaptureSessionInterruptionEnded, object: self.session)
+        }
     }
     
     private func removeObservers() {
